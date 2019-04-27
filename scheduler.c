@@ -24,9 +24,12 @@ static int just_finished;
 /* index of first process that may be ready */
 static int last_ready_proc;
 
-/* return next running process 
-   return -1 if no process is available */
+/* number of process that are ready */
+static int num_ready;
+
+/* return next running process */
 int next_process (struct process* proc, int num_proc, int policy) {
+
 	/* non-preemptive */
 	if(running != -1 && (policy == SJF || policy == FIFO))
 		return running;
@@ -44,20 +47,18 @@ int next_process (struct process* proc, int num_proc, int policy) {
 			break;
 
 		case FIFO:
-			if(proc[just_finished+1].pid != -1) ret = just_finished+1;
+			if(proc[just_finished+1].pid != -1) ret = just_finished + 1;
 			break;
 
 		case RR:
-			if (running == -1) {
-				rep(0, num_proc){
-					if (proc[i].pid != -1 && proc[i].t_exec > 0){
-						ret = i;
-						break;
-					}
-				}
-			}
-			else if ((ntime - t_last) % 500 == 0)  {
-				ret = (running + 1) % num_proc;
+			int possibly_next = -1;
+			/* if last process is done, assign next process */
+			if (running == -1) possibly_next = just_finished + 1;
+			/* if time quantum expires */
+			else if ((ntime - t_last) % 500 == 0) possibly_next = running + 1;
+			
+			if (possibly_next != -1) {
+				ret = possibly_next % num_proc;
 				while (proc[ret].pid == -1 || proc[ret].t_exec == 0)
 					ret = (ret + 1) % num_proc;
 			}
@@ -81,6 +82,7 @@ void schedule (struct process* proc, int num_proc, int policy) {
 	finish = 0;
 	last_ready_proc = 0;
 	just_finished = -1;
+	num_ready = 0;
 
 	/* Set single core prevent from preemption */
 	proc_assign_cpu(getpid(), PARENT_CPU);
@@ -104,6 +106,7 @@ void schedule (struct process* proc, int num_proc, int policy) {
 			just_finished = running;
 			running = -1;
 			++finish;
+			--num_ready;
 
 			/* break if all process are done */
 			if (fininsh == num_proc) break;
@@ -115,22 +118,30 @@ void schedule (struct process* proc, int num_proc, int policy) {
 			if (proc[i].t_ready == currt) {
 				proc[i].pid = proc_exec(proc[i]);
 				proc_block(proc[i].pid);
+				++num_ready;
 			} else {
 				last_ready_proc = i;
 				break;
 			}
 		}
 
-		/* Select next process */
-		int next = next_process(proc, num_proc, policy);
-		if (next != -1 && running != next) {
-			/* Context switch */
-			proc_wakeup(proc[next].pid);
-			proc_block(proc[running].pid);
-			running = next;
-			rrt = currt;
+		/* If there are process that are ready, select next process */
+		if(num_ready){
+			int next = next_process(proc, num_proc, policy);
+			assert(next != -1);
+			if (next != -1 && running != next) {
+				/* Context switch */
+				proc_wakeup(proc[next].pid);
+				proc_block(proc[running].pid);
+				running = next;
+				rrt = currt;
+			}
+		}
+		else {
+			assert(running == -1);
 		}
 
+		
 		/* Run one unit of time */
 		run_unit_time();
 
