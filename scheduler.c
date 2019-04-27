@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sched.h>
+#include <assert.h>
 
 #define  rep(start, n)  for(int i = start; i < n; ++i)
 
@@ -39,7 +40,7 @@ int next_process (struct process* proc, int num_proc, int policy) {
 		return running;
 		
 	int ret = -1;
-	switch(policy){
+	switch (policy){
 		case PSJF:
 		case SJF:
 			rep(0, num_proc) {
@@ -51,7 +52,8 @@ int next_process (struct process* proc, int num_proc, int policy) {
 			break;
 
 		case FIFO:
-			if(proc[just_finished+1].pid != -1) ret = just_finished + 1;
+			/* next process is the one after the one just finished */
+			if (proc[just_finished+1].pid != -1) ret = just_finished + 1;
 			break;
 
 		case RR:
@@ -61,12 +63,15 @@ int next_process (struct process* proc, int num_proc, int policy) {
 			/* if time quantum expires */
 			else if ((ntime - t_last) % 500 == 0) possibly_next = running + 1;
 			
+			/* find next process */
 			if (possibly_next != -1) {
 				ret = possibly_next % num_proc;
 				while (proc[ret].pid == -1 || proc[ret].t_exec == 0)
 					ret = (ret + 1) % num_proc;
 			}
 			else ret = running;
+
+			break;
 
 		default: break;
 	}
@@ -98,7 +103,7 @@ void schedule (struct process* proc, int num_proc, int policy) {
 	qsort(proc, num_proc, sizeof(struct process), compare);
 
 	/* assign all process pid to -1, i.e. not ready */
-	rep (0, num_proc) {
+	rep(0, num_proc) {
 		proc[i].pid = -1;
 	}
 
@@ -130,7 +135,7 @@ void schedule (struct process* proc, int num_proc, int policy) {
 		}
 
 		/* If there are process that are ready, select next process */
-		if(num_ready){
+		if (num_ready){
 			int next = next_process(proc, num_proc, policy);
 			assert(next != -1);
 			if (next != -1 && running != next) {
