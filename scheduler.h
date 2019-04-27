@@ -9,3 +9,5 @@
 #define PSJF 4
 
 void schedule(struct process *, int num_proc, int policy);
+
+#endif

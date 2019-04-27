@@ -1,8 +1,12 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
+#define _GNU_SOURCE
 #include "process.h"
 #include "scheduler.h"
+#include <stdlib.h>
+#include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sched.h>
 
 #define  rep(start, n)  for(int i = start; i < n; ++i)
 
@@ -109,11 +113,11 @@ void schedule (struct process* proc, int num_proc, int policy) {
 			--num_ready;
 
 			/* break if all process are done */
-			if (fininsh == num_proc) break;
+			if (finish == num_proc) break;
 		}
 
 		/* Check if processes are ready
-		   If ready, assign pid and block */
+		   If ready, assign pid and block process */
 		rep(last_ready_proc, num_proc) {
 			if (proc[i].t_ready == currt) {
 				proc[i].pid = proc_exec(proc[i]);
