@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sched.h>
+#include <assert.h>
 
 #define  rep(start, n)  for(int i = start; i < n; ++i)
 
@@ -55,18 +56,20 @@ int next_process (struct process* proc, int num_proc, int policy) {
 			break;
 
 		case RR:
-			int possibly_next = -1;
-			/* if last process is done, assign next process */
-			if (running == -1) possibly_next = just_finished + 1;
-			/* if time quantum expires */
-			else if ((ntime - t_last) % 500 == 0) possibly_next = running + 1;
-			
-			if (possibly_next != -1) {
-				ret = possibly_next % num_proc;
-				while (proc[ret].pid == -1 || proc[ret].t_exec == 0)
-					ret = (ret + 1) % num_proc;
+			{
+				int possibly_next;
+				/* if last process is done, assign next process */
+				if (running == -1) possibly_next = just_finished + 1;
+				/* if time quantum expires */
+				else if ((currt - rrt) % 500 == 0) possibly_next = running + 1;
+				
+				if (possibly_next != -1) {
+					ret = possibly_next % num_proc;
+					while (proc[ret].pid == -1 || proc[ret].t_exec == 0)
+						ret = (ret + 1) % num_proc;
+				}
+				else ret = running;
 			}
-			else ret = running;
 
 		default: break;
 	}
@@ -82,7 +85,7 @@ void schedule (struct process* proc, int num_proc, int policy) {
 	/* init */
 	currt = 0;
 	running = -1;
-	lastrrt = 0;
+	rrt = 0;
 	finish = 0;
 	last_ready_proc = 0;
 	just_finished = -1;
@@ -106,6 +109,9 @@ void schedule (struct process* proc, int num_proc, int policy) {
 
 		/* Check if current running process is done */
 		if (running != -1 && proc[running].t_exec == 0) {
+#ifdef DEBUG
+			fprintf(stderr, "%s finish at time %d.\n", proc[running].name, currt);
+#endif
 			waitpid(proc[running].pid, NULL, 0);
 			just_finished = running;
 			running = -1;
@@ -122,6 +128,9 @@ void schedule (struct process* proc, int num_proc, int policy) {
 			if (proc[i].t_ready == currt) {
 				proc[i].pid = proc_exec(proc[i]);
 				proc_block(proc[i].pid);
+#ifdef DEBUG
+				fprintf(stderr, "%s ready at time %d.\n", proc[i].name, currt);
+#endif
 				++num_ready;
 			} else {
 				last_ready_proc = i;
