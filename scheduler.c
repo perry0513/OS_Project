@@ -40,7 +40,7 @@ int next_process (struct process* proc, int num_proc, int policy) {
 		return running;
 		
 	int ret = -1;
-	switch(policy){
+	switch (policy){
 		case PSJF:
 		case SJF:
 			rep(0, num_proc) {
@@ -52,12 +52,13 @@ int next_process (struct process* proc, int num_proc, int policy) {
 			break;
 
 		case FIFO:
-			if(proc[just_finished+1].pid != -1) ret = just_finished + 1;
+			/* next process is the one after the one just finished */
+			if (proc[just_finished+1].pid != -1) ret = just_finished + 1;
 			break;
 
 		case RR:
 			{
-				int possibly_next;
+				int possibly_next = -1;
 				/* if last process is done, assign next process */
 				if (running == -1) possibly_next = just_finished + 1;
 				/* if time quantum expires */
@@ -70,6 +71,8 @@ int next_process (struct process* proc, int num_proc, int policy) {
 				}
 				else ret = running;
 			}
+
+			break;
 
 		default: break;
 	}
@@ -101,7 +104,7 @@ void schedule (struct process* proc, int num_proc, int policy) {
 	qsort(proc, num_proc, sizeof(struct process), compare);
 
 	/* assign all process pid to -1, i.e. not ready */
-	rep (0, num_proc) {
+	rep(0, num_proc) {
 		proc[i].pid = -1;
 	}
 
@@ -139,7 +142,7 @@ void schedule (struct process* proc, int num_proc, int policy) {
 		}
 
 		/* If there are process that are ready, select next process */
-		if(num_ready){
+		if (num_ready){
 			int next = next_process(proc, num_proc, policy);
 			assert(next != -1);
 			if (next != -1 && running != next) {
