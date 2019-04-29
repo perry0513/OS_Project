@@ -66,8 +66,20 @@ int next_process (struct process* proc, int num_proc, int policy) {
 				
 				if (possibly_next != -1) {
 					ret = possibly_next % num_proc;
+					for(int j = 0;j<num_proc;j++){
+						if(proc[ret].pid != -1 && proc[ret].t_exec != 0){
+							break;
+						}
+						else {
+							ret = (ret+1) % num_proc;
+							if(j == num_proc-1) ret = running;
+						}
+					}
+					//下面這樣在最後一個process感覺會卡住...？
+					/*
 					while (proc[ret].pid == -1 || proc[ret].t_exec == 0)
 						ret = (ret + 1) % num_proc;
+					*/
 				}
 				else ret = running;
 			}
