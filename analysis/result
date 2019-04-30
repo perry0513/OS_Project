@@ -98,3 +98,8 @@
 [SJF_5] Sec to unit time       :  1521.8484575731043
 [SJF_5] Actual / Theoretical   :  0.7609242287865521
 
+[example] Avg. waiting time (UT) :  15.0
+[example] Avg. waiting time (sec):  0.01940592130025228
+[example] Sec to unit time       :  14.164906058578309
+[example] Actual / Theoretical   :  0.9443270705718873
+
