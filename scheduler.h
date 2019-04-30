@@ -3,10 +3,7 @@
 
 #include "process.h"
 
-#define FIFO 1
-#define RR	 2
-#define SJF  3
-#define PSJF 4
+enum Policy{FIFO, RR, SJF, PSJF};
 
 void schedule(struct process *, int num_proc, int policy);
 
