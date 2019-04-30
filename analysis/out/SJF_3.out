@@ -1,0 +1,24 @@
+P1 ready at time 100.
+P2 ready at time 100.
+P3 ready at time 100.
+P4 ready at time 200.
+P5 ready at time 200.
+P6 ready at time 300.
+P7 ready at time 400.
+P8 ready at time 500.
+P1 finish at time 3100.
+P4 finish at time 3110.
+P5 finish at time 3120.
+P6 finish at time 7120.
+P7 finish at time 11120.
+P2 finish at time 16120.
+P3 finish at time 23120.
+P8 finish at time 32120.
+P1 3644
+P2 3645
+P3 3646
+P4 3647
+P5 3648
+P6 3649
+P7 3650
+P8 3651

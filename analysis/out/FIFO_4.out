@@ -1,0 +1,12 @@
+P1 ready at time 0.
+P2 ready at time 500.
+P3 ready at time 500.
+P4 ready at time 1500.
+P1 finish at time 2000.
+P2 finish at time 2500.
+P3 finish at time 2700.
+P4 finish at time 3200.
+P1 3865
+P2 3866
+P3 3867
+P4 3868
