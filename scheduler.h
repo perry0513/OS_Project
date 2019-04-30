@@ -5,6 +5,6 @@
 
 enum Policy{FIFO, RR, SJF, PSJF};
 
-void schedule(struct process *, int num_proc, int policy);
+void schedule(struct process *, int num_proc, enum Poilcy policy);
 
 #endif
