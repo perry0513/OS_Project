@@ -52,5 +52,9 @@ int main()
 
 	schedule(proc, nproc, policy);
 
+	// print pid
+	for (int i = 0; i < nproc; ++i)
+		printf("%32s %d\n", proc[i].name, proc[i].pid);
+
 	exit(0);
 }
