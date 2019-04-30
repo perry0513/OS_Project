@@ -42,7 +42,7 @@ int main()
 	
 	proc = (struct process *)malloc(nproc * sizeof(struct process));
 
-	for (int i = 0; i < nproc; i++) {
+	for (int i = 0; i < nproc; ++i) {
 		scanf("%32s", proc[i].name);
 		if (scanf("%d%d", &proc[i].t_ready, &proc[i].t_exec) < 2 || proc[i].t_ready < 0 || proc[i].t_exec < 0) {
 			fprintf(stderr, "Invalid ready time or execution time.(Or process name exceeds 32 characters)");
@@ -51,6 +51,10 @@ int main()
 	}
 
 	schedule(proc, nproc, policy);
+
+	// print pid
+	for (int i = 0; i < nproc; ++i)
+		printf("%s %d\n", proc[i].name, proc[i].pid);
 
 	exit(0);
 }

@@ -57,6 +57,7 @@ int proc_exec(struct process proc)
 
 	if (pid == 0) {
 		// char to_dmesg[200];
+
 		syscall(GET_TIME, &start_t);
 		for (int i = 0; i < proc.t_exec; i++) {
 			run_unit_time();

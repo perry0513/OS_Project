@@ -66,18 +66,10 @@ int next_process (struct process* proc, int num_proc, int policy) {
 				
 				if (possibly_next != -1) {
 					ret = possibly_next % num_proc;					
-					//下面這樣在最後一個process...？
+					//Because there we have a variable num_ready keeping the number of processes available
+					//so no need to worry about infinite loop when no process left.
 					while (proc[ret].pid == -1 || proc[ret].t_exec == 0)
 						ret = (ret + 1) % num_proc;
-					/*
-					for(int j = 0;j<num_proc;j++){
-						if(proc[ret].pid != -1 && proc[ret].t_exec != 0) break;
-						else {
-							ret = (ret+1) % num_proc;
-							if(j == num_proc-1) ret = -1;
-						}
-					}
-					*/
 				}
 				else ret = running;
 			}
@@ -153,7 +145,6 @@ void schedule (struct process* proc, int num_proc, int policy) {
 		/* If there are process that are ready, select next process */
 		if (num_ready){
 			int next = next_process(proc, num_proc, policy);
-			assert(next != -1);
 			if (next != -1 && running != next) {
 				/* Context switch */
 				proc_wakeup(proc[next].pid);
@@ -161,9 +152,6 @@ void schedule (struct process* proc, int num_proc, int policy) {
 				running = next;
 				rrt = currt;
 			}
-		}
-		else {
-			assert(running == -1);
 		}
 
 		
