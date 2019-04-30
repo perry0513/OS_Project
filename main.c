@@ -54,7 +54,7 @@ int main()
 
 	// print pid
 	for (int i = 0; i < nproc; ++i)
-		printf("%s %d\n", proc[i].name, proc[i].pid);
+		fprintf(stderr, "%s %d\n", proc[i].name, proc[i].pid);
 
 	exit(0);
 }
