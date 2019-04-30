@@ -56,13 +56,14 @@ int proc_exec(struct process proc)
 	}
 
 	if (pid == 0) {
-		//char to_dmesg[200];
+		// char to_dmesg[200];
+
 		syscall(GET_TIME, &start_t);
 		for (int i = 0; i < proc.t_exec; i++) {
 			run_unit_time();
 #ifdef DEBUG
-			if (i % 100 == 0)
-				fprintf(stderr, "%s: %d/%d\n", proc.name, i, proc.t_exec);
+			//if (i % 100 == 0)
+				// fprintf(stderr, "%s: %d/%d\n", proc.name, i, proc.t_exec);
 #endif
 		}
 		syscall(GET_TIME,&end_t);
