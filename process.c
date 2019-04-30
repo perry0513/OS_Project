@@ -7,8 +7,11 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
-#define GET_TIME 314
-#define PRINTK 315
+#include <time.h>
+#define GET_TIME 333
+#define PRINTK 334
+
+struct timespec start_t, end_t;
 
 // assign process #pid to CPU #core
 int proc_assign_cpu(int pid, int core)
@@ -53,9 +56,8 @@ int proc_exec(struct process proc)
 	}
 
 	if (pid == 0) {
-		unsigned long start_sec, start_nsec, end_sec, end_nsec;
-		char to_dmesg[200];
-		syscall(GET_TIME, &start_sec, &start_nsec);
+		//char to_dmesg[200];
+		syscall(GET_TIME, &start_t);
 		for (int i = 0; i < proc.t_exec; i++) {
 			run_unit_time();
 #ifdef DEBUG
@@ -63,9 +65,11 @@ int proc_exec(struct process proc)
 				fprintf(stderr, "%s: %d/%d\n", proc.name, i, proc.t_exec);
 #endif
 		}
-		syscall(GET_TIME, &end_sec, &end_nsec);
-		sprintf(to_dmesg, "[project1] %d %lu.%09lu %lu.%09lu\n", getpid(), start_sec, start_nsec, end_sec, end_nsec);
-		syscall(PRINTK, to_dmesg);
+		syscall(GET_TIME,&end_t);
+		//sprintf(to_dmesg, "[project1] %d %lu.%09lu %lu.%09lu\n", getpid(), start_t.tv_sec, start_t.tv_nsec, end_t.tv_sec, end_t.tv_nsec);
+		//syscall(PRINTK, to_dmesg);
+		syscall(PRINTK, getpid(), start_t.tv_sec, start_t.tv_nsec, end_t.tv_sec, end_t.tv_nsec);
+
 		exit(0);
 	}
 	
