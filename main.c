@@ -8,24 +8,16 @@
 #include "process.h"
 #include "scheduler.h"
 
-int main(int argc, char* argv[])
+int main()
 {
 
-	char sched_policy[256];
+	char sched_policy[4];
 	int policy;
 	int nproc;
 	struct process *proc;
 
-	scanf("%s", sched_policy);
-	scanf("%d", &nproc);
+	scanf("%4s", sched_policy);
 	
-	proc = (struct process *)malloc(nproc * sizeof(struct process));
-
-	for (int i = 0; i < nproc; i++) {
-		scanf("%s%d%d", proc[i].name,
-			&proc[i].t_ready, &proc[i].t_exec);
-	}
-
 	if (strcmp(sched_policy, "FIFO") == 0) {
 		policy = FIFO;
 	}
@@ -41,6 +33,21 @@ int main(int argc, char* argv[])
 	else {
 		fprintf(stderr, "Invalid policy: %s", sched_policy);
 		exit(0);
+	}
+
+	if (scanf("%d", &nproc) < 1 || nproc <= 0) {
+		fprintf(stderr, "Invalid number of processes.(Or policy exceeds 4 characters)");
+		exit(0);
+	}
+	
+	proc = (struct process *)malloc(nproc * sizeof(struct process));
+
+	for (int i = 0; i < nproc; i++) {
+		scanf("%32s", proc[i].name);
+		if (scanf("%d%d", &proc[i].t_ready, &proc[i].t_exec) < 2 || proc[i].t_ready <= 0 || proc[i].t_exec <= 0) {
+			fprintf(stderr, "Invalid ready time or execution time.(Or process name exceeds 32 characters)");
+			exit(0);
+		}
 	}
 
 	schedule(proc, nproc, policy);
