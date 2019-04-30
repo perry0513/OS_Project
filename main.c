@@ -35,7 +35,7 @@ int main()
 		exit(0);
 	}
 
-	if (scanf("%d", &nproc) < 1 || nproc <= 0) {
+	if (scanf("%d", &nproc) < 1 || nproc < 0) {
 		fprintf(stderr, "Invalid number of processes.(Or policy exceeds 4 characters)");
 		exit(0);
 	}
@@ -44,7 +44,7 @@ int main()
 
 	for (int i = 0; i < nproc; i++) {
 		scanf("%32s", proc[i].name);
-		if (scanf("%d%d", &proc[i].t_ready, &proc[i].t_exec) < 2 || proc[i].t_ready <= 0 || proc[i].t_exec <= 0) {
+		if (scanf("%d%d", &proc[i].t_ready, &proc[i].t_exec) < 2 || proc[i].t_ready < 0 || proc[i].t_exec < 0) {
 			fprintf(stderr, "Invalid ready time or execution time.(Or process name exceeds 32 characters)");
 			exit(0);
 		}
