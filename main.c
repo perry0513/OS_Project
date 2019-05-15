@@ -12,12 +12,12 @@ int main()
 {
 
 	char sched_policy[4];
-	int policy;
+	enum Policy policy;
 	int nproc;
 	struct process *proc;
 
 	scanf("%4s", sched_policy);
-	
+
 	if (strcmp(sched_policy, "FIFO") == 0) {
 		policy = FIFO;
 	}
@@ -39,7 +39,7 @@ int main()
 		fprintf(stderr, "Invalid number of processes.(Or policy exceeds 4 characters)");
 		exit(0);
 	}
-	
+
 	proc = (struct process *)malloc(nproc * sizeof(struct process));
 
 	for (int i = 0; i < nproc; ++i) {
