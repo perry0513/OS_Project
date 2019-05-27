@@ -1,4 +1,4 @@
-main
-*.o
-OS_PJ1_Test/
-out*
+Project1/main
+Project1/*.o
+Project1/OS_PJ1_Test/
+Project1/out*

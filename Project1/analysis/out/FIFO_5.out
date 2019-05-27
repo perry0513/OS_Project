@@ -1,0 +1,21 @@
+P1 ready at time 0.
+P2 ready at time 200.
+P3 ready at time 200.
+P4 ready at time 400.
+P5 ready at time 400.
+P6 ready at time 600.
+P7 ready at time 600.
+P1 finish at time 8000.
+P2 finish at time 13000.
+P3 finish at time 16000.
+P4 finish at time 17000.
+P5 finish at time 18000.
+P6 finish at time 19000.
+P7 finish at time 23000.
+P1 3446
+P2 3447
+P3 3448
+P4 3449
+P5 3450
+P6 3451
+P7 3452
