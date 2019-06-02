@@ -159,13 +159,15 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 	
 	//每個pgd條目指向一個pud，以此類推
 	//pgd->pud->pmd->pte->page physical address
-	//(詳情參閱第八章)
+	//(詳情參閱第八章 或 https://blog.csdn.net/yrj/article/details/2508785
 
 	//先在terminl跑一下uname -m
 	//如果是32位元，會跑出i開頭的
 	//如果是64位元，會跑出x86_64
 	
 	//基本上除非用PAE不然只要看pgd, pte就好
+
+	
 
 	pgd_t *pgd; //Page Global Directory (PGD)
 	p4d_t *p4d;
