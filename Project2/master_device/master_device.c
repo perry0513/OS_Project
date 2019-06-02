@@ -61,20 +61,22 @@ static int addr_len;
 //file operations
 static struct file_operations master_fops = {
 	.owner = THIS_MODULE,
-	.unlocked_ioctl = master_ioctl,
-	.open = master_open,
+	.unlocked_ioctl = master_ioctl, //149行
+	.open = master_open, //143行 目前只有回傳0
 	.write = send_msg,
-	.release = master_close
+	.release = master_close //138行 目前只有回傳0
 };
-
+//：）
 //device info
+//miscdevice 是一個小型的驅動程式
+//直接參考這篇！！：http://nano-chicken.blogspot.com/2009/12/linux-modules6-miscdev.html
 static struct miscdevice master_dev = {
 	.minor = MISC_DYNAMIC_MINOR,
 	.name = "master_device",
 	.fops = &master_fops
 };
 
-static int __init master_init(void)
+static int __init master_init(void) //主要執行這個function
 {
 	int ret;
 	file1 = debugfs_create_file("master_debug", 0644, NULL, NULL, &master_fops);
@@ -87,16 +89,19 @@ static int __init master_init(void)
 
 	printk(KERN_INFO "master has been registered!\n");
 
-	old_fs = get_fs();
+	//這篇解釋得很清楚：https://www.cnblogs.com/bittorrent/p/3264211.html
+	//簡單來說就是 把系統函式所能存取的記憶體空間重新設定為0—4GB
+	old_fs = get_fs(); //type mm_segment_t
 	set_fs(KERNEL_DS);
 
 	//initialize the master server
 	sockfd_srv = sockfd_cli = NULL;
-	memset(&addr_cli, 0, sizeof(addr_cli));
+	memset(&addr_cli, 0, sizeof(addr_cli)); //用0把前面那個全部bit設成0
 	memset(&addr_srv, 0, sizeof(addr_srv));
 	addr_srv.sin_family = AF_INET;
-	addr_srv.sin_port = htons(DEFAULT_PORT);
+	addr_srv.sin_port = htons(DEFAULT_PORT); //利用hton得到Network Byte Order
 	addr_srv.sin_addr.s_addr = INADDR_ANY;
+	//上面這幾行都是固定的，設定好一個詳細的address及通信方式
 	addr_len = sizeof(struct sockaddr_in);
 
 	sockfd_srv = ksocket(AF_INET, SOCK_STREAM, 0);
@@ -117,7 +122,7 @@ static int __init master_init(void)
 		return -1;
 	}
     printk("master_device init OK\n");
-	set_fs(old_fs);
+	set_fs(old_fs);//回覆剛剛上面 把系統函式所能存取的記憶體空間重新設定為0—4GB 那步
 	return 0;
 }
 
@@ -156,7 +161,7 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 	pud_t *pud;
 	pmd_t *pmd;
     pte_t *ptep, pte;
-	old_fs = get_fs();
+	old_fs = get_fs(); //type mm_segment_t
 	set_fs(KERNEL_DS);
 	switch(ioctl_num){
 		case master_IOCTL_CREATESOCK:// create socket and accept a connection
@@ -203,9 +208,18 @@ static ssize_t send_msg(struct file *file, const char __user *buf, size_t count,
 {
 //call when user is writing to this device
 	char msg[BUF_SIZE];
-	if(copy_from_user(msg, buf, count))
+	/*
+	static inline unsigned long copy_from_user(void *to, const void __user *from, unsigned long n)
+	*to (kernel space 的pointer)
+	*from (user space 的pointer)
+	n (user space 想從 kernel space copy 的字數)
+	return 沒有拷貝成功的字數
+	=> 拷貝成功就會回傳0
+	*/
+	if(copy_from_user(msg, buf, count)) //if 有字數沒有從user space copy成功
 		return -ENOMEM;
-	ksend(sockfd_cli, msg, count, 0);
+	ksend(sockfd_cli, msg, count, 0); //如果都copy成功的話就送出
+
 
 	return count;
 
