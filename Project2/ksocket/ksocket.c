@@ -1,17 +1,17 @@
-/* 
+/*
  * ksocket project
  * BSD-style socket APIs for kernel 2.6 developers
- * 
+ *
  * @2007-2008, China
  * @song.xian-guang@hotmail.com (MSN Accounts)
- * 
+ *
  * This code is licenced under the GPL
  * Feel free to contact me if any questions
  *
  * @2017
  * Hardik Bagdi (hbagdi1@binghamton.edu)
  * Changes for Compatibility with Linux 4.9 to use iov_iter
- * 
+ *
  */
 #include <linux/module.h>
 #include <linux/string.h>
@@ -50,11 +50,20 @@ static void yh_sk_data_ready(struct sock *sk, int bytes)
 }
 */
 
+// 'struct socket' is defined in 'net.h',
+// 'ops'(operations) may be consider as "a list of memeber functions" of 'struct socket' in c++
+// creates a socket and returns a pointer to the created socket
+
+// domain:
+// 	AF_UNIX or AF_LOCAL is used for local communitcation
+// 	there are other options including AF_INET(ipv4), AF_INET6(ipv6) etc.
+
+// reference: http://man7.org/linux/man-pages/man2/socket.2.html
 ksocket_t ksocket(int domain, int type, int protocol)
 {
 	struct socket *sk = NULL;
 	int ret = 0;
-	
+
 	ret = sock_create(domain, type, protocol, &sk);
 	if (ret < 0)
 	{
@@ -74,12 +83,15 @@ ksocket_t ksocket(int domain, int type, int protocol)
 		printk(KERN_INFO "sk or sk->sk is NULL\n");
 	}
 	*/
-	
+
 	printk("sock_create sk= 0x%p\n", sk);
-	
+
 	return sk;
 }
 
+
+// binds a socket to an address(contains something like ip, port...)
+// usually used in server(master) side
 int kbind(ksocket_t socket, struct sockaddr *address, int address_len)
 {
 	struct socket *sk;
@@ -88,42 +100,50 @@ int kbind(ksocket_t socket, struct sockaddr *address, int address_len)
 	sk = (struct socket *)socket;
 	ret = sk->ops->bind(sk, address, address_len);
 	printk("kbind ret = %d\n", ret);
-	
+
 	return ret;
 }
 
+// listen for connections on a socket with a waiting queue of size 'backlog'
+// used in server(master) side
 int klisten(ksocket_t socket, int backlog)
 {
 	struct socket *sk;
 	int ret;
 
 	sk = (struct socket *)socket;
-	
+
 	if ((unsigned)backlog > SOMAXCONN)
 		backlog = SOMAXCONN;
-	
+
 	ret = sk->ops->listen(sk, backlog);
-	
+
 	return ret;
 }
 
+// connect to an address(contains something like ip, port...)
+// usually used in client(slave) side
 int kconnect(ksocket_t socket, struct sockaddr *address, int address_len)
 {
 	struct socket *sk;
 	int ret;
 
 	sk = (struct socket *)socket;
+
 	ret = sk->ops->connect(sk, address, address_len, 0/*sk->file->f_flags*/);
-	
+
+
 	return ret;
 }
 
+// accept a connection on a socket, then create a new socket and return a pointer to it
+// the new socket will likely be used to send and recv messages(not quite sure)
 ksocket_t kaccept(ksocket_t socket, struct sockaddr *address, int *address_len)
 {
 	struct socket *sk;
 	struct socket *new_sk = NULL;
 	int ret;
-	
+
 	sk = (struct socket *)socket;
 
 	printk("family = %d, type = %d, protocol = %d\n",
@@ -135,21 +155,21 @@ ksocket_t kaccept(ksocket_t socket, struct sockaddr *address, int *address_len)
 		return NULL;
 	if (!new_sk)
 		return NULL;
-	
+
 	new_sk->type = sk->type;
 	new_sk->ops = sk->ops;
-	
+
 	ret = sk->ops->accept(sk, new_sk, 0, true);
 	if (ret < 0)
 		goto error_kaccept;
-	
+
 	if (address)
 	{
 		ret = new_sk->ops->getname(new_sk, address, address_len, 2);
 		if (ret < 0)
 			goto error_kaccept;
 	}
-	
+
 	return new_sk;
 
 error_kaccept:
@@ -157,6 +177,7 @@ error_kaccept:
 	return NULL;
 }
 
+// recv message on a socket(TCP)
 ssize_t krecv(ksocket_t socket, void *buffer, size_t length, int flags)
 {
 	struct socket *sk;
@@ -205,12 +226,13 @@ ssize_t krecv(ksocket_t socket, void *buffer, size_t length, int flags)
 	if (ret < 0)
 		goto out_krecv;
 	//ret = msg.msg_iov.iov_len;//?
-	
+
 out_krecv:
 	return ret;
 
 }
 
+// send message on a socekt(TCP)
 ssize_t ksend(ksocket_t socket, const void *buffer, size_t length, int flags)
 {
 	struct socket *sk;
@@ -251,10 +273,14 @@ ssize_t ksend(ksocket_t socket, const void *buffer, size_t length, int flags)
 #ifndef KSOCKET_ADDR_SAFE
 	set_fs(old_fs);
 #endif
-	
+
 	return len;//len ?
 }
 
+// shutdown a socket
+// difference between close and shutdown(?):
+// https://drmingdrmer.github.io/tech/programming/network/2015/07/28/close-shutdown.html
+// haven't read it yet
 int kshutdown(ksocket_t socket, int how)
 {
 	struct socket *sk;
@@ -263,7 +289,7 @@ int kshutdown(ksocket_t socket, int how)
 	sk = (struct socket *)socket;
 	if (sk)
 		ret = sk->ops->shutdown(sk, how);
-	
+
 	return ret;
 }
 
@@ -282,6 +308,7 @@ int kclose(ksocket_t socket)
 	return ret;
 }
 
+// recv message on a socekt(UDP)
 ssize_t krecvfrom(ksocket_t socket, void * buffer, size_t length,
               int flags, struct sockaddr * address,
               int * address_len)
@@ -312,7 +339,7 @@ ssize_t krecvfrom(ksocket_t socket, void * buffer, size_t length,
 	//control
 	msg.msg_control = NULL;
 	msg.msg_controllen = 0;
-	
+
 #ifndef KSOCKET_ADDR_SAFE
 	old_fs = get_fs();
 	set_fs(KERNEL_DS);
@@ -327,10 +354,11 @@ ssize_t krecvfrom(ksocket_t socket, void * buffer, size_t length,
 	{
 		*address_len = msg.msg_namelen;
 	}
-	
+
 	return len;
 }
 
+// send message on a socekt(UDP)
 ssize_t ksendto(ksocket_t socket, void *message, size_t length,
               int flags, const struct sockaddr *dest_addr,
               int dest_len)
@@ -375,32 +403,40 @@ ssize_t ksendto(ksocket_t socket, void *message, size_t length,
 #ifndef KSOCKET_ADDR_SAFE
 	set_fs(old_fs);
 #endif
-	
+
 	return len;//len ?
 }
 
+// return current address of socket itself
+// ret is file descriptor(usually abbreviated as sockfd) of the socket itself(?)
 int kgetsockname(ksocket_t socket, struct sockaddr *address, int *address_len)
 {
 	struct socket *sk;
 	int ret;
-	
+
 	sk = (struct socket *)socket;
 	ret = sk->ops->getname(sk, address, address_len, 0);
-	
+
 	return ret;
 }
 
+// return the address of peer that is connecting to socket
+// ret is file descriptor(usually abbreviated as sockfd) of the peer(?)
 int kgetpeername(ksocket_t socket, struct sockaddr *address, int *address_len)
 {
 	struct socket *sk;
 	int ret;
-	
+
 	sk = (struct socket *)socket;
 	ret = sk->ops->getname(sk, address, address_len, 1);
-	
+
 	return ret;
 }
 
+// i just copied from the link below
+// get and set options on sockets(????)
+
+// reference: http://man7.org/linux/man-pages/man2/setsockopt.2.html
 int ksetsockopt(ksocket_t socket, int level, int optname, void *optval, int optlen)
 {
 	struct socket *sk;
@@ -421,13 +457,14 @@ int ksetsockopt(ksocket_t socket, int level, int optname, void *optval, int optl
 	else
 		ret = sk->ops->setsockopt(sk, level, optname, optval, optlen);
 
-#ifndef KSOCKET_ADDR_SAFE	
+#ifndef KSOCKET_ADDR_SAFE
 	set_fs(old_fs);
 #endif
 
 	return ret;
 }
 
+// ENOSYS means "function not implemented"
 int kgetsockopt(ksocket_t socket, int level, int optname, void *optval, int *optlen)
 {
 /*	struct socket *sk;
@@ -435,7 +472,7 @@ int kgetsockopt(ksocket_t socket, int level, int optname, void *optval, int *opt
 	mm_segment_t old_fs;
 
 	sk = (struct socket *)socket;
-	
+
 	old_fs = get_fs();
 	set_fs(KERNEL_DS);
 
@@ -443,7 +480,7 @@ int kgetsockopt(ksocket_t socket, int level, int optname, void *optval, int *opt
 		ret = sock_getsockopt(sk, level, optname, optval, optlen);
 	else
 		ret = sk->ops->getsockopt(sk, level, optname, optval, optlen);
-	
+
 	set_fs(old_fs);
 
 	return ret;
@@ -453,25 +490,31 @@ int kgetsockopt(ksocket_t socket, int level, int optname, void *optval, int *opt
 
 
 //helper functions
+
+// parse a ipv4 string into array of numbers(between 0 and 255)
+// there may be a bug here(?)
+// maybe better to change type of addr from char[] to unsigned char[](?)
+// not sure how the conversion from 'char' to 'unsigned int' acts
 unsigned int inet_addr(char* ip)
 {
 	int a, b, c, d;
 	char addr[4];
-	
+
 	sscanf(ip, "%d.%d.%d.%d", &a, &b, &c, &d);
 	addr[0] = a;
 	addr[1] = b;
 	addr[2] = c;
 	addr[3] = d;
-	
+
 	return *(unsigned int *)addr;
 }
 
+// convert an address(in some struct) into ipv4 string
 char *inet_ntoa(struct in_addr *in)
 {
 	char* str_ip = NULL;
 	u_int32_t int_ip = 0;
-	
+
 	str_ip = kmalloc(16 * sizeof(char), GFP_KERNEL);
 	if (!str_ip)
 		return NULL;
@@ -479,7 +522,7 @@ char *inet_ntoa(struct in_addr *in)
 		memset(str_ip, 0, 16);
 
 	int_ip = in->s_addr;
-	
+
 	sprintf(str_ip, "%d.%d.%d.%d",  (int_ip      ) & 0xFF,
 									(int_ip >> 8 ) & 0xFF,
 									(int_ip >> 16) & 0xFF,
@@ -490,7 +533,7 @@ char *inet_ntoa(struct in_addr *in)
 //module init and cleanup procedure
 static int ksocket_init(void)
 {
-	printk("%s version %s\n%s\n%s\n", 
+	printk("%s version %s\n%s\n%s\n",
 		KSOCKET_NAME, KSOCKET_VERSION,
 		KSOCKET_DESCPT, KSOCKET_AUTHOR);
 
