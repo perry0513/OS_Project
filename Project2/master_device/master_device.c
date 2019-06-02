@@ -156,14 +156,26 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 	long ret = -EINVAL;
 	size_t data_size = 0, offset = 0;
 	char *tmp;
-	pgd_t *pgd;
+	
+	//每個pgd條目指向一個pud，以此類推
+	//pgd->pud->pmd->pte->page physical address
+	//(詳情參閱第八章)
+
+	//先在terminl跑一下uname -m
+	//如果是32位元，會跑出i開頭的
+	//如果是64位元，會跑出x86_64
+	
+	//基本上除非用PAE不然只要看pgd, pte就好
+
+	pgd_t *pgd; //Page Global Directory (PGD)
 	p4d_t *p4d;
-	pud_t *pud;
-	pmd_t *pmd;
-    pte_t *ptep, pte;
+	pud_t *pud; //Page Upper Directory (PUD)
+	pmd_t *pmd; //Page Middle Directory (PMD)
+    pte_t *ptep, pte; //Page Table (PTE)
 	old_fs = get_fs(); //type mm_segment_t
 	set_fs(KERNEL_DS);
-	switch(ioctl_num){
+	switch(ioctl_num)
+	{
 		case master_IOCTL_CREATESOCK:// create socket and accept a connection
 			sockfd_cli = kaccept(sockfd_srv, (struct sockaddr *)&addr_cli, &addr_len);
 			if (sockfd_cli == NULL)
@@ -189,7 +201,7 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 			}
 			ret = 0;
 			break;
-		default:
+		default: //印出他的physical address
 			pgd = pgd_offset(current->mm, ioctl_param);
 			p4d = p4d_offset(pgd, ioctl_param);
 			pud = pud_offset(p4d, ioctl_param);
