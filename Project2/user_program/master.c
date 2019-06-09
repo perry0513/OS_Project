@@ -11,6 +11,8 @@
 
 #define PAGE_SIZE 4096
 #define BUF_SIZE 512
+#define MAP_SIZE PAGE_SIZE * 100
+
 size_t get_filesize(const char* filename); // get the size of the input file
 
 
@@ -70,6 +72,19 @@ int main (int argc, char* argv[])
 				// write the number of bytes read to the the device
 				write(dev_fd, buf, ret);
 			} while(ret > 0);
+			break;
+		case 'm':
+			while (offset < file_size) {
+				size_t length = MAP_SIZE;
+				if ((file_size - offset) < length) {
+					length = file_size - offset;
+				}
+				file_address = mmap(NULL, length, PROT_READ, MAP_SHARED, file_fd, offset);
+				kernel_address = mmap(NULL, length, PROT_WRITE, MAP_SHARED, dev_fd, offset);
+				memcpy(kernel_address, file_address, length);
+				offset += length;
+				ioctl(dev_fd, 0x12345678, length);
+			}
 			break;
 	}
 
