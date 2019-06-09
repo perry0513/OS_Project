@@ -215,12 +215,13 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 				printk("kclose cli error\n");
 				return -1;
 			}
+			set_fs(old_fs);
 			ret = 0;
 			break;
 		default:
             pgd = pgd_offset(current->mm, ioctl_param);
-			p4d = p4d_offset(pgd, ioctl_param);
-			pud = pud_offset(p4d, ioctl_param);
+			// p4d = p4d_offset(pgd, ioctl_param);
+			pud = pud_offset(pgd, ioctl_param);
 			pmd = pmd_offset(pud, ioctl_param);
 			ptep = pte_offset_kernel(pmd , ioctl_param);
 			pte = *ptep;
@@ -228,7 +229,6 @@ static long slave_ioctl(struct file *file, unsigned int ioctl_num, unsigned long
 			ret = 0;
 			break;
 	}
-    set_fs(old_fs);
 
 	return ret;
 }

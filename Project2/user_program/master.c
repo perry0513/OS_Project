@@ -90,6 +90,7 @@ int main (int argc, char* argv[])
 
 	// end sending data, close the connection
 	// 0x12345679 : master_IOCTL_EXIT in master_device.c
+	ioctl(dev_fd, 7122);
 	if(ioctl(dev_fd, 0x12345679) == -1)
 	{
 		perror("ioclt server exits error\n");

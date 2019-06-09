@@ -24,7 +24,7 @@
 #define VM_RESERVED   (VM_DONTEXPAND | VM_DONTDUMP)
 #endif
 
-#define DEFAULT_PORT 2325
+#define DEFAULT_PORT 2326
 #define master_IOCTL_CREATESOCK 0x12345677
 #define master_IOCTL_MMAP 0x12345678
 #define master_IOCTL_EXIT 0x12345679
@@ -241,12 +241,13 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 				printk("kclose cli error\n");
 				return -1;
 			}
+			// set_fs(old_fs);
 			ret = 0;
 			break;
 		default: //印出他的physical address
 			pgd = pgd_offset(current->mm, ioctl_param);
-			p4d = p4d_offset(pgd, ioctl_param);
-			pud = pud_offset(p4d, ioctl_param);
+			// p4d = p4d_offset(pgd, ioctl_param);
+			pud = pud_offset(pgd, ioctl_param);
 			pmd = pmd_offset(pud, ioctl_param);
 			ptep = pte_offset_kernel(pmd , ioctl_param);
 			pte = *ptep;
@@ -255,7 +256,6 @@ static long master_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 			break;
 	}
 
-	set_fs(old_fs);
 	return ret;
 }
 static ssize_t send_msg(struct file *file, const char __user *buf, size_t count, loff_t *data)

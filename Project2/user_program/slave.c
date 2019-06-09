@@ -16,7 +16,7 @@ int main (int argc, char* argv[])
 {
 	char buf[BUF_SIZE];
 	int i, dev_fd, file_fd; // the fd for the device and the fd for the input file
-	size_t ret, file_size = 0, data_size = -1, offset=0;
+	size_t ret, file_size = 0, data_size = -1, offset = 0;
 	char file_name[50];
 	char method[20];
 	char ip[20];
@@ -53,7 +53,7 @@ int main (int argc, char* argv[])
 	}
 
 	// write "ioctl success\n" to stdout (fd = 1)
-    write(1, "ioctl success\n", 14);
+    // write(1, "ioctl success\n", 14);
 
 	switch(method[0])
 	{
@@ -87,6 +87,7 @@ int main (int argc, char* argv[])
 
 	// end receiving data, close the connection
 	// 0x12345679 : master_IOCTL_EXIT in master_device.c
+	ioctl(dev_fd, 7122);
 	if(ioctl(dev_fd, 0x12345679) == -1)
 	{
 		perror("ioclt client exits error\n");
